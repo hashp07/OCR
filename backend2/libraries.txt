@@ -1,0 +1,6 @@
+npm i express-validator
+mongoose
+cors
+dotenv
+npm init -y
+express
