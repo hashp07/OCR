@@ -286,14 +286,15 @@ const Hero = ({ startAnimation = true }: HomeProps) => {
         {/* CTAs */}
         <div ref={ctaRef} className="flex justify-center gap-4">
           <button
-            onClick={() => navigate('/auth')}
+           onClick={() => navigate('/auth', { state: { isSignUp: true } })}
             className="px-7 py-3 sm:px-10 sm:py-4 text-sm sm:text-base bg-[#7816b5] text-white font-bold rounded-full hover:scale-105 hover:bg-[#a75edb] transition-all duration-300 shadow-xl hover:shadow-[#7816b5]/50 cursor-pointer"
           >
             Sign Up
           </button>
           
           <button
-            onClick={() => navigate('/auth')}
+           
+            onClick={() => navigate('/auth', { state: { isSignUp: false } })}
             // ✅ FIX: Added a semi-transparent black background to the login button so it doesn't get lost
             className="px-7 py-3 sm:px-10 sm:py-4 text-sm sm:text-base bg-black/40 backdrop-blur-sm border border-[#7e0fcd] text-white font-bold rounded-full hover:scale-105 hover:bg-[#a75edb]/20 transition-all duration-300 cursor-pointer"
           >

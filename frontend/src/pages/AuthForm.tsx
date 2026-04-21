@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const AuthForm: React.FC = () => {
-    const [isToggled, setIsToggled] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
+    const [isToggled, setIsToggled] = useState(location.state?.isSignUp || false);
+
+    useEffect(() => {
+        if (location.state?.isSignUp !== undefined) {
+            setIsToggled(location.state.isSignUp);
+        }
+    }, [location.state]);
 
     // Form states
     const [username, setUsername] = useState('');
@@ -12,15 +19,15 @@ const AuthForm: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Connects to your backend app.js route: app.use('/users', ...)
-    // Fallback to localhost:4000 if the env variable isn't set
-    const API_BASE_URL = 'http://localhost:3001/api/users';
+    // ✅ FIX: Uses your live Vercel environment variable, falls back to localhost for local development
+    const API_BASE_URL = import.meta.env.VITE_BACKEND_URL 
+        ? `${import.meta.env.VITE_BACKEND_URL}/users` 
+        : 'http://localhost:3001/api/users';
 
     const handleRegisterClick = (e: React.MouseEvent) => {
         e.preventDefault();
         setIsToggled(true);
         setError(null);
-        // Clear inputs when switching tabs
         setUsername(''); setEmail(''); setPassword('');
     };
 
@@ -28,7 +35,6 @@ const AuthForm: React.FC = () => {
         e.preventDefault();
         setIsToggled(false);
         setError(null);
-        // Clear inputs when switching tabs
         setUsername(''); setEmail(''); setPassword('');
     };
 
@@ -42,22 +48,17 @@ const AuthForm: React.FC = () => {
             const response = await fetch(`${API_BASE_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Backend loginUser controller expects email and password
                 body: JSON.stringify({ email, password }),
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                // Read custom backend error or express-validator errors
                 const errorMessage = data.error || (data.errors && data.errors[0]?.msg) || 'Login failed';
                 throw new Error(errorMessage);
             }
 
-            // Save the token to localStorage
             localStorage.setItem('token', data.token);
-
-            // Success! Redirect to dashboard
             navigate('/dashboard');
         } catch (err: any) {
             setError(err.message);
@@ -82,15 +83,11 @@ const AuthForm: React.FC = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                // Read custom backend error or express-validator errors
                 const errorMessage = data.error || (data.errors && data.errors[0]?.msg) || 'Registration failed';
                 throw new Error(errorMessage);
             }
 
-            // Save the token to localStorage
             localStorage.setItem('token', data.token);
-
-            // Success! Redirect to dashboard
             navigate('/dashboard');
         } catch (err: any) {
             setError(err.message);
@@ -119,7 +116,6 @@ const AuthForm: React.FC = () => {
                 <div className="credentials-panel signin">
                     <h2 className="slide-element">Login</h2>
                     
-                    {/* Error Message Display */}
                     {!isToggled && error && <div className="error-message slide-element">{error}</div>}
 
                     <form onSubmit={handleLoginSubmit}>
@@ -130,7 +126,6 @@ const AuthForm: React.FC = () => {
                                 onChange={(e) => setEmail(e.target.value)}
                                 required 
                             />
-                            {/* Changed to Email to match your backend model */}
                             <label htmlFor="">Email</label>
                             <i className="fa-solid fa-envelope"></i>
                         </div>
@@ -174,7 +169,6 @@ const AuthForm: React.FC = () => {
                 <div className="credentials-panel signup">
                     <h2 className="slide-element">Register</h2>
 
-                    {/* Error Message Display */}
                     {isToggled && error && <div className="error-message slide-element">{error}</div>}
 
                     <form onSubmit={handleRegisterSubmit}>
@@ -297,11 +291,14 @@ const AuthForm: React.FC = () => {
                     padding: 0 10%;
                 }
 
+                /* ✅ PERFORMANCE FIX: Added GPU Acceleration & removed blur */
                 .credentials-panel.signin { left: 0; }
                 .credentials-panel.signin .slide-element {
-                    transform: translateX(0%);
-                    transition: .7s;
+                    transform: translate3d(0, 0, 0);
+                    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.7s ease;
                     opacity: 1;
+                    will-change: transform, opacity;
+                    backface-visibility: hidden;
                 }
 
                 .credentials-panel.signin .slide-element:nth-child(1) { transition-delay: 2.1s; }
@@ -312,7 +309,7 @@ const AuthForm: React.FC = () => {
                 .credentials-panel.signin .slide-element:nth-child(6) { transition-delay: 2.6s; }
 
                 .auth-wrapper.toggled .credentials-panel.signin .slide-element {
-                    transform: translateX(-120%);
+                    transform: translate3d(-120%, 0, 0);
                     opacity: 0;
                 }
 
@@ -325,10 +322,11 @@ const AuthForm: React.FC = () => {
 
                 .credentials-panel.signup { right: 0; }
                 .credentials-panel.signup .slide-element {
-                    transform: translateX(120%);
-                    transition: .7s ease;
+                    transform: translate3d(120%, 0, 0);
+                    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.7s ease;
                     opacity: 0;
-                    filter: blur(10px);
+                    will-change: transform, opacity;
+                    backface-visibility: hidden;
                 }
 
                 .credentials-panel.signup .slide-element:nth-child(1) { transition-delay: 0s; }
@@ -340,9 +338,8 @@ const AuthForm: React.FC = () => {
                 .credentials-panel.signup .slide-element:nth-child(7) { transition-delay: 0.6s; }
 
                 .auth-wrapper.toggled .credentials-panel.signup .slide-element {
-                    transform: translateX(0%);
+                    transform: translate3d(0, 0, 0);
                     opacity: 1;
-                    filter: blur(0px);
                 }
 
                 .auth-wrapper.toggled .credentials-panel.signup .slide-element:nth-child(1) { transition-delay: 1.7s; }
@@ -377,7 +374,7 @@ const AuthForm: React.FC = () => {
                     font-weight: 600;
                     border-bottom: 2px solid rgba(255, 255, 255, 0.3);
                     padding-right: 23px;
-                    transition: .5s;
+                    transition: border-color .3s ease;
                 }
 
                 .field-wrapper input:focus,
@@ -392,7 +389,7 @@ const AuthForm: React.FC = () => {
                     transform: translateY(-50%);
                     font-size: 16px;
                     color: rgba(255, 255, 255, 0.5);
-                    transition: .5s;
+                    transition: all .3s ease;
                     pointer-events: none;
                 }
 
@@ -410,7 +407,7 @@ const AuthForm: React.FC = () => {
                     font-size: 18px;
                     transform: translateY(-50%);
                     color: rgba(255, 255, 255, 0.5);
-                    transition: 0.5s;
+                    transition: color 0.3s ease;
                 }
 
                 .field-wrapper input:focus~i,
@@ -442,7 +439,7 @@ const AuthForm: React.FC = () => {
                     top: -100%;
                     left: 0;
                     z-index: -1;
-                    transition: .5s;
+                    transition: top .5s ease;
                 }
 
                 .submit-button:hover:before { top: 0; }
@@ -483,10 +480,11 @@ const AuthForm: React.FC = () => {
                 }
 
                 .welcome-section.signin .slide-element {
-                    transform: translateX(0);
-                    transition: .7s ease;
+                    transform: translate3d(0, 0, 0);
+                    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.7s ease;
                     opacity: 1;
-                    filter: blur(0px);
+                    will-change: transform, opacity;
+                    backface-visibility: hidden;
                 }
 
                 .welcome-section.signin .slide-element:nth-child(1) { transition-delay: 2.0s; }
@@ -494,9 +492,8 @@ const AuthForm: React.FC = () => {
                 .welcome-section.signin .slide-element:nth-child(3) { transition-delay: 2.2s; }
 
                 .auth-wrapper.toggled .welcome-section.signin .slide-element {
-                    transform: translateX(120%);
+                    transform: translate3d(120%, 0, 0);
                     opacity: 0;
-                    filter: blur(10px);
                 }
 
                 .auth-wrapper.toggled .welcome-section.signin .slide-element:nth-child(1) { transition-delay: 0s; }
@@ -510,10 +507,11 @@ const AuthForm: React.FC = () => {
                 }
 
                 .welcome-section.signup .slide-element {
-                    transform: translateX(-120%);
-                    transition: .7s ease;
+                    transform: translate3d(-120%, 0, 0);
+                    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.7s ease;
                     opacity: 0;
-                    filter: blur(10px);
+                    will-change: transform, opacity;
+                    backface-visibility: hidden;
                 }
 
                 .welcome-section.signup .slide-element:nth-child(1) { transition-delay: 0s; }
@@ -521,9 +519,8 @@ const AuthForm: React.FC = () => {
                 .welcome-section.signup .slide-element:nth-child(3) { transition-delay: 0.2s; }
 
                 .auth-wrapper.toggled .welcome-section.signup .slide-element {
-                    transform: translateX(0%);
+                    transform: translate3d(0, 0, 0);
                     opacity: 1;
-                    filter: blur(0);
                 }
 
                 .auth-wrapper.toggled .welcome-section.signup .slide-element:nth-child(1) { transition-delay: 1.7s; }
@@ -580,6 +577,7 @@ const AuthForm: React.FC = () => {
                     letter-spacing: 1px;
                 }
 
+                /* ✅ PERFORMANCE FIX: Hardware acceleration for large background shapes */
                 .auth-wrapper .background-shape {
                     position: absolute;
                     right: -10vw;
@@ -587,12 +585,14 @@ const AuthForm: React.FC = () => {
                     height: 120vh;
                     width: 70vw;
                     background: linear-gradient(45deg, var(--violet-dark), var(--violet-glow));
-                    transform: rotate(15deg) skewY(20deg);
+                    transform: rotate(15deg) skewY(20deg) translateZ(0);
                     transform-origin: bottom right;
-                    transition: 1.5s ease;
+                    transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
                     transition-delay: 1.6s;
                     box-shadow: 0 0 50px rgba(138, 43, 226, 0.4);
                     overflow: hidden;
+                    will-change: transform;
+                    backface-visibility: hidden;
                 }
 
                 .scanner-line {
@@ -605,17 +605,18 @@ const AuthForm: React.FC = () => {
                     box-shadow: 0 0 20px var(--violet-accent), 0 0 40px var(--violet-accent);
                     animation: scan 4s linear infinite alternate;
                     opacity: 0.6;
+                    will-change: transform;
                 }
 
                 @keyframes scan {
-                    0% { top: 0%; opacity: 0; }
+                    0% { transform: translateY(0); opacity: 0; }
                     10% { opacity: 0.6; }
                     90% { opacity: 0.6; }
-                    100% { top: 100%; opacity: 0; }
+                    100% { transform: translateY(120vh); opacity: 0; }
                 }
 
                 .auth-wrapper.toggled .background-shape {
-                    transform: rotate(0deg) skewY(0deg);
+                    transform: rotate(0deg) skewY(0deg) translateZ(0);
                     transition-delay: .5s;
                 }
 
@@ -627,15 +628,17 @@ const AuthForm: React.FC = () => {
                     width: 80vw;
                     background: var(--primary-bg);
                     border-top: 5px solid var(--violet-accent);
-                    transform: rotate(0deg) skewY(0deg);
+                    transform: rotate(0deg) skewY(0deg) translateZ(0);
                     transform-origin: bottom left;
-                    transition: 1.5s ease;
+                    transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
                     transition-delay: .5s;
                     box-shadow: 0 -20px 50px rgba(138, 43, 226, 0.3);
+                    will-change: transform;
+                    backface-visibility: hidden;
                 }
 
                 .auth-wrapper.toggled .secondary-shape {
-                    transform: rotate(-15deg) skewY(-20deg);
+                    transform: rotate(-15deg) skewY(-20deg) translateZ(0);
                     transition-delay: 1.2s;
                 }
             `}</style>
