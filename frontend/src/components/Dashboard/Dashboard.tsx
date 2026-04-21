@@ -69,7 +69,7 @@ export function Dashboard({ onUploadClick }: DashboardProps) {
   useEffect(() => {
     async function fetchData() {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const apiUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
         const res = await fetch(`${apiUrl}/api/ocr/results`,{
           headers: {
             'Content-Type': 'application/json',
