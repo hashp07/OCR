@@ -53,7 +53,7 @@ export function CustomerManagement() {
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const apiUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
         const response = await fetch(`${apiUrl}/api/ocr/results`, {
           headers: {
             'Content-Type': 'application/json',

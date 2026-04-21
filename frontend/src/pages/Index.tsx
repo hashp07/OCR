@@ -143,9 +143,10 @@ const Index = () => {
   const handleOCRSave = async (payload: { fileName: string; rawJson: unknown }) => {
     setOcrSaveLoading(true);
     try {
-      // ✅ FIXED: Now matches the variable we put in Vercel!
+      // ✅ VITE_BACKEND_URL must match the name in Vercel perfectly!
       const apiUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
       const extractedText = deriveExtractedText(payload.rawJson);
+      
       const response = await fetch(`${apiUrl}/api/ocr/save`, {
         method: 'POST',
         headers: {
