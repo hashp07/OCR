@@ -20,8 +20,8 @@ const AuthForm: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     // ✅ FIX: Uses your live Vercel environment variable, falls back to localhost for local development
-    const API_BASE_URL = import.meta.env.VITE_BACKEND_URL 
-    ? `${import.meta.env.VITE_BACKEND_URL}/users` 
+   const API_BASE_URL = import.meta.env.VITE_BACKEND_URL 
+    ? `${import.meta.env.VITE_BACKEND_URL}/api/users` 
     : 'http://localhost:3001/api/users';
 
     const handleRegisterClick = (e: React.MouseEvent) => {
