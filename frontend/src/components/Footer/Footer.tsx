@@ -112,18 +112,15 @@ const footerContentMap: Record<string, { title: string; subtitle: string; body: 
 };
 
 const Footer = () => {
-  // State to track which modal is currently open
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
-  // Function to close the modal
   const closeModal = () => setActiveModal(null);
 
-  // --- ADDED scrollToSection FUNCTION ---
   const scrollToSection = (e: React.MouseEvent<HTMLDivElement>, id: string) => {
     e.preventDefault();
     const element = document.getElementById(id);
     if (element) {
-      const yOffset = -100; // Match the offset used in your Hero component
+      const yOffset = -100;
       const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
@@ -131,54 +128,57 @@ const Footer = () => {
 
   return (
     <>
-      <footer className="relative z-10 border-t border-white/10 bg-black/40 backdrop-blur-xl pt-16 pb-10 px-6 lg:px-12 font-sans">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+      <footer className="relative z-10 border-t border-white/10 bg-black/40 backdrop-blur-xl pt-12 pb-10 px-6 lg:px-12 font-sans">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-12 mb-12 md:mb-16">
           
           {/* --- Brand Column --- */}
           <div className="col-span-1 md:col-span-2">
-             <div className="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => scrollToSection(e, 'home')}>
-            <img 
-              src={logo1} 
-              alt="OCRIQ Logo" 
-              className="h-10 sm:h-12 md:h-14 w-auto object-contain pb-1"
-            />
-          </div>
-            <p className="text-gray-400 text-[15px] max-w-[340px] leading-relaxed">
+            <div className="flex items-center cursor-pointer hover:opacity-80 transition-opacity mb-4" onClick={(e) => scrollToSection(e, 'home')}>
+              <img 
+                src={logo1} 
+                alt="OCRIQ Logo" 
+                className="h-10 sm:h-12 md:h-14 w-auto object-contain pb-1"
+              />
+            </div>
+            <p className="text-gray-400 text-sm md:text-[15px] max-w-[340px] leading-relaxed">
               Transforming physical documents into structured data with the power of advanced AI and seamless workflow integrations.
             </p>
           </div>
 
-          {/* --- Product Links Column --- */}
-          <div>
-            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-sm">Product</h4>
-            <ul className="space-y-4 text-gray-400 text-[15px]">
-              <li><button onClick={() => setActiveModal('features')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">Features</button></li>
-              <li><button onClick={() => setActiveModal('integrations')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">Integrations</button></li>
-              <li><button onClick={() => setActiveModal('api')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">API Documentation</button></li>
-              <li><button onClick={() => setActiveModal('pricing')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">Pricing</button></li>
-            </ul>
-          </div>
+          {/* --- LINKS WRAPPER: Side-by-side on mobile --- */}
+          <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-6 md:gap-12">
+            {/* Product Links */}
+            <div>
+              <h4 className="text-white font-bold mb-4 md:mb-6 uppercase tracking-wider text-xs md:text-sm">Product</h4>
+              <ul className="space-y-3 md:space-y-4 text-gray-400 text-sm md:text-[15px]">
+                <li><button onClick={() => setActiveModal('features')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">Features</button></li>
+                <li><button onClick={() => setActiveModal('integrations')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">Integrations</button></li>
+                <li><button onClick={() => setActiveModal('api')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">API Documentation</button></li>
+                <li><button onClick={() => setActiveModal('pricing')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">Pricing</button></li>
+              </ul>
+            </div>
 
-          {/* --- Company Links Column --- */}
-          <div>
-            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-sm">Company</h4>
-            <ul className="space-y-4 text-gray-400 text-[15px]">
-              <li><button onClick={() => setActiveModal('about')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">About Us</button></li>
-              <li><button onClick={() => setActiveModal('privacy')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">Privacy Policy</button></li>
-              <li><button onClick={() => setActiveModal('terms')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">Terms of Service</button></li>
-              <li><button onClick={() => setActiveModal('support')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">Contact Support</button></li>
-            </ul>
+            {/* Company Links */}
+            <div>
+              <h4 className="text-white font-bold mb-4 md:mb-6 uppercase tracking-wider text-xs md:text-sm">Company</h4>
+              <ul className="space-y-3 md:space-y-4 text-gray-400 text-sm md:text-[15px]">
+                <li><button onClick={() => setActiveModal('about')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">About Us</button></li>
+                <li><button onClick={() => setActiveModal('privacy')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">Privacy Policy</button></li>
+                <li><button onClick={() => setActiveModal('terms')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">Terms of Service</button></li>
+                <li><button onClick={() => setActiveModal('support')} className="text-left hover:text-[#d946ef] transition-colors cursor-pointer focus:outline-none w-full">Contact Support</button></li>
+              </ul>
+            </div>
           </div>
 
         </div>
         
         {/* --- Bottom Row: Copyright & Socials --- */}
         <div className="max-w-[1200px] mx-auto pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 text-xs md:text-sm text-center md:text-left">
             © {new Date().getFullYear()} OCRIQ Inc. All rights reserved.
           </p>
           
-          <div className="flex items-center gap-6 text-gray-500">
+          <div className="flex items-center justify-center gap-6 text-gray-500">
             {/* Facebook Icon */}
             <button onClick={() => window.open('https://facebook.com', '_blank')} className="hover:text-white transition-colors focus:outline-none" aria-label="Facebook">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -204,49 +204,42 @@ const Footer = () => {
       </footer>
 
       {/* --- MODAL POPUP --- */}
-      {/* If activeModal has a value, this renders the popup */}
       {activeModal && footerContentMap[activeModal] && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
           
-          {/* Background Dark Overlay (Clicking it closes modal) */}
           <div 
             className="absolute inset-0 bg-black/80 backdrop-blur-sm cursor-pointer" 
             onClick={closeModal}
           ></div>
           
-          {/* Modal Content Box */}
-          <div className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-3xl shadow-2xl p-8 sm:p-10 animate-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-3xl shadow-2xl p-6 sm:p-10 animate-in zoom-in-95 duration-200">
             
-            {/* Close "X" Button top right */}
             <button 
               onClick={closeModal}
-              className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-full focus:outline-none"
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-full focus:outline-none"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
 
-            {/* Modal Header */}
-            <div className="mb-8 pr-8">
-              <h2 className="text-3xl font-extrabold text-white mb-2">
+            <div className="mb-6 sm:mb-8 pr-8">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">
                 {footerContentMap[activeModal].title}
               </h2>
-              <p className="text-transparent bg-clip-text bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] font-semibold text-lg">
+              <p className="text-transparent bg-clip-text bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] font-semibold text-base sm:text-lg">
                 {footerContentMap[activeModal].subtitle}
               </p>
             </div>
 
-            {/* Modal Body */}
-            <div className="text-[15px] leading-relaxed max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
+            <div className="text-sm sm:text-[15px] leading-relaxed max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
               {footerContentMap[activeModal].body}
             </div>
 
-            {/* Modal Action Button */}
-            <div className="mt-8 pt-6 border-t border-white/10 flex justify-end">
+            <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-white/10 flex justify-end">
               <button 
                 onClick={closeModal}
-                className="px-6 py-2.5 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-colors focus:outline-none"
+                className="w-full sm:w-auto px-6 py-2.5 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-colors focus:outline-none"
               >
                 Close
               </button>
@@ -255,7 +248,6 @@ const Footer = () => {
         </div>
       )}
 
-      {/* --- SCROLLBAR STYLES --- */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
