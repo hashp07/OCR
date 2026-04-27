@@ -40,3 +40,7 @@
 .read-the-docs {
   color: #888;
 }
+.animate-pan-left { animation: pan-left 8s linear infinite; }
+.animate-pan-right { animation: pan-right 12s linear infinite; }
+@keyframes pan-left { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+@keyframes pan-right { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }

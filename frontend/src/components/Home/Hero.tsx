@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import logo1 from "@/assets/logo2.jpeg";
 
 // Import the Footer component!
 // Ensure the path is correct based on where your Footer.tsx is located.
@@ -400,38 +401,35 @@ const Hero = () => {
 
       {/* --- RESPONSIVE FLOATING HEADER --- */}
       <header className="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] sm:w-[95%] max-w-[1200px] z-50">
-        <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-between px-5 sm:px-6 py-3.5 w-full transition-all duration-300">
+        <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-between px-5 sm:px-6 w-full transition-all duration-300">
           
           {/* Logo */}
-          <div className="flex items-center gap-2 sm:gap-3 font-bold text-lg sm:text-xl tracking-tight cursor-pointer">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-tr from-[#8b5cf6] to-[#d946ef] text-white flex items-center justify-center rounded-full shadow-lg">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="sm:w-[16px] sm:h-[16px]">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-            </div>
-            OCRIQ
+          <div className="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => scrollToSection(e, 'home')}>
+            <img 
+              src={logo1} 
+              alt="OCRIQ Logo" 
+              className="h-10 sm:h-12 md:h-14 w-auto object-contain p-1"
+            />
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-10 text-base font-semibold text-gray-300">
             <a href="#home" onClick={(e) => scrollToSection(e, 'home')} className="relative group hover:text-white transition-colors duration-300">
               Home
-              <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] group-hover:w-full transition-all duration-300 rounded-full"></span>
+              <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[#8b5cf6] group-hover:w-full transition-all duration-300 rounded-full"></span>
             </a>
             <a href="#pipeline" onClick={(e) => scrollToSection(e, 'pipeline')} className="relative group hover:text-white transition-colors duration-300">
               About
-              <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] group-hover:w-full transition-all duration-300 rounded-full"></span>
+              <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[#8b5cf6] group-hover:w-full transition-all duration-300 rounded-full"></span>
             </a>
             <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="relative group hover:text-white transition-colors duration-300">
               Contact
-              <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] group-hover:w-full transition-all duration-300 rounded-full"></span>
+              <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-[#8b5cf6] group-hover:w-full transition-all duration-300 rounded-full"></span>
             </a>
           </nav>
 
           {/* Desktop Login Button */}
-          <button onClick={() => navigate('/auth', { state: { isSignUp: false } })} className="hidden md:block px-6 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#a75edb] hover:from-[#7c3aed] hover:to-[#8b5cf6] text-white text-sm font-bold rounded-full transition-all duration-300 cursor-pointer shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:-translate-y-0.5">
+          <button onClick={() => navigate('/auth', { state: { isSignUp: false } })} className="hidden md:block px-6 py-2.5 bg-[#8d5df5] hover:bg-[#d946ef] text-white text-sm font-bold rounded-full transition-all duration-300 cursor-pointer shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:-translate-y-0.5">
             Workspace Login
           </button>
 
@@ -455,7 +453,7 @@ const Hero = () => {
             <a href="#home" onClick={(e) => scrollToSection(e, 'home')} className="text-lg font-semibold text-gray-300 hover:text-white transition-colors">Home</a>
             <a href="#pipeline" onClick={(e) => scrollToSection(e, 'pipeline')} className="text-lg font-semibold text-gray-300 hover:text-white transition-colors">About</a>
             <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="text-lg font-semibold text-gray-300 hover:text-white transition-colors">Contact</a>
-            <button onClick={() => navigate('/auth', { state: { isSignUp: false } })} className="mt-2 px-8 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] text-white text-sm font-bold rounded-full shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+            <button onClick={() => navigate('/auth', { state: { isSignUp: false } })} className="mt-2 px-8 py-3 bg-[#8d5df5] hover:bg-[#d946ef] transition-colors text-white text-sm font-bold rounded-full shadow-[0_0_15px_rgba(139,92,246,0.3)]">
               Workspace Login
             </button>
           </nav>
@@ -464,8 +462,8 @@ const Hero = () => {
 
       {/* --- SECTION 1: HERO --- */}
       <section id="home" className="relative z-10 min-h-screen pt-32 pb-20 flex flex-col items-center justify-center px-4 sm:px-6 text-center mt-[-5vh]">
-        <div className="fade-in-element flex items-center gap-2 sm:gap-3 p-1.5 pr-4 sm:pr-5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-6 sm:mb-8">
-          <span className="px-2.5 py-1 text-[10px] sm:text-xs font-bold bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] text-white rounded-full">New</span>
+        <div className="fade-in-element flex items-center gap-2 sm:gap-3 p-1.5 pr-4 sm:pr-5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-6 sm:mb-8 cursor-default">
+          <span className="px-2.5 py-1 text-[10px] sm:text-xs font-bold bg-[#8d5df5] hover:bg-[#d946ef] transition-colors text-white rounded-full">New</span>
           <span className="text-xs sm:text-sm font-medium text-gray-200 truncate">Automated JSON Extraction</span>
         </div>
         <h1 className="fade-in-element text-4xl sm:text-[50px] md:text-[72px] lg:text-[84px] leading-[1.1] font-extrabold tracking-tight mb-4 sm:mb-6 max-w-[1000px]">
@@ -475,7 +473,7 @@ const Hero = () => {
           OCRIQ brings AI automation to your fingertips & streamlines your document processing tasks.
         </p>
         <div className="fade-in-element flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
-          <button onClick={() => navigate('/auth', { state: { isSignUp: true } })} className="group flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto bg-gradient-to-r from-[#8b5cf6] to-[#a75edb] text-white font-bold rounded-full transition-all duration-300 cursor-pointer shadow-[0_0_20px_rgba(139,92,246,0.4)] sm:hover:-translate-y-1">
+          <button onClick={() => navigate('/auth', { state: { isSignUp: true } })} className="group flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 w-full sm:w-auto bg-[#8d5df5] hover:bg-[#d946ef] text-white font-bold rounded-full transition-all duration-300 cursor-pointer shadow-[0_0_20px_rgba(139,92,246,0.4)] sm:hover:-translate-y-1">
             Get Started
             <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
           </button>
@@ -519,7 +517,7 @@ const Hero = () => {
                 {/* Animated Marquee Side */}
                 <div className="marquee-container w-full md:w-1/2 relative overflow-hidden h-[140px] sm:h-[180px] flex items-center">
                   <div className="absolute inset-0 z-10 pointer-events-none" 
-                       style={{ background: 'linear-gradient(to right, #020202 0%, transparent 15%, transparent 85%, #020202 100%)' }} />
+                        style={{ background: 'linear-gradient(to right, #020202 0%, transparent 15%, transparent 85%, #020202 100%)' }} />
                   
                   <div className="flex w-max gap-4 sm:gap-6" style={{
                     animation: `${step.scrollDirection === 'left' ? 'scrollLeft' : 'scrollRight'} 25s linear infinite`
@@ -561,7 +559,7 @@ const Hero = () => {
               <div className="flex-1 relative flex items-center justify-center mt-4">
                 <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full border border-[#8b5cf6]/30 relative overflow-hidden flex items-center justify-center">
                   <div className="absolute inset-0 rounded-full animate-radar-spin" 
-                       style={{ background: 'conic-gradient(from 0deg, transparent 75%, rgba(139, 92, 246, 0.6) 100%)' }}>
+                        style={{ background: 'conic-gradient(from 0deg, transparent 75%, rgba(139, 92, 246, 0.6) 100%)' }}>
                   </div>
                   <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4wNSkiLz48L3N2Zz4=')] opacity-50"></div>
                   <div className="w-2 h-2 bg-[#d946ef] rounded-full shadow-[0_0_15px_#d946ef] z-10 relative"></div>
@@ -717,7 +715,7 @@ const Hero = () => {
                     placeholder="How can we help you?"
                   ></textarea>
                 </div>
-                <button type="submit" disabled={formStatus === 'submitting'} className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] text-white text-sm sm:text-base font-extrabold rounded-full hover:opacity-90 transition-all shadow-lg hover:shadow-[#8b5cf6]/40 flex justify-center items-center mt-2 sm:mt-4 disabled:opacity-50 cursor-pointer">
+                <button type="submit" disabled={formStatus === 'submitting'} className="w-full py-3.5 sm:py-4 bg-[#8d5df5] hover:bg-[#d946ef] text-white text-sm sm:text-base font-extrabold rounded-full transition-all shadow-lg hover:shadow-[#8b5cf6]/40 flex justify-center items-center mt-2 sm:mt-4 disabled:opacity-50 cursor-pointer">
                   {formStatus === 'submitting' ? 'Sending...' : 'Send Message'}
                 </button>
               </form>

@@ -325,15 +325,22 @@
 
 // export default Index;
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Sidebar } from '@/components/Layout/Sidebar';
 import { Dashboard } from '@/components/Dashboard/Dashboard';
 import { FileUpload } from '@/components/Upload/FileUpload';
 import { ResultsEditor } from '@/components/OCR/ResultsEditor';
 import { CustomerManagement } from '@/components/Customers/CustomerManagement';
+import { SearchAnalytics } from '@/components/Search/SearchAnalytics';
+import { SettingsScreen } from '@/components/Settings/SettingsScreen';
+import { InvoiceManagement } from '@/components/Invoices/InvoiceManagement';
 import { Card } from '@/components/ui/card';
 import { Search, Settings, FileText } from 'lucide-react';
+import { Document, Packer, Paragraph, TextRun } from 'docx';
+import jsPDF from 'jspdf';
+import { useNavigate } from 'react-router-dom';
+
 
 // Import the newly created Footer component
 // Note: Adjust the path below depending on exactly where you saved Footer.tsx
@@ -368,8 +375,10 @@ function deriveExtractedText(rawJson: unknown): string {
 
 const Index = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [processedFiles, setProcessedFiles] = useState<UploadedFile[]>([]);
+  const [me, setMe] = useState<{ username?: string; email?: string } | null>(null);
   
   // Lifted Upload State
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -379,6 +388,44 @@ const Index = () => {
   const COUNTDOWN_SECS = 300;
   const [countdown, setCountdown] = useState(COUNTDOWN_SECS);
   const [ocrSaveLoading, setOcrSaveLoading] = useState(false);
+
+  const apiUrl = useMemo(
+    () => import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001',
+    []
+  );
+
+  const authHeaders = useMemo(() => {
+    const token = localStorage.getItem('token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/auth');
+      return;
+    }
+
+    const run = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/api/users/me`, { headers: authHeaders });
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          navigate('/auth');
+          return;
+        }
+        const payload = await res.json().catch(() => ({}));
+        setMe(payload?.user || null);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    run();
+  }, [apiUrl, authHeaders, navigate]);
 
   useEffect(() => {
     let countdownInterval: NodeJS.Timeout;
@@ -526,10 +573,194 @@ const Index = () => {
     }
   };
 
+  const safeString = (v: any) => {
+    if (v === null || v === undefined) return '';
+    if (typeof v === 'string') return v;
+    try {
+      return JSON.stringify(v);
+    } catch {
+      return String(v);
+    }
+  };
+
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const docsToCsv = (docs: any[]) => {
+    const header = ['_id', 'fileName', 'createdAt', 'uploadedAt', 'updatedAt', 'data'];
+    const rows = docs.map((d) => {
+      const data = d?.rawJson?.data ?? null;
+      const cols = [
+        safeString(d?._id),
+        safeString(d?.fileName),
+        safeString(d?.createdAt),
+        safeString(d?.uploadedAt),
+        safeString(d?.updatedAt),
+        safeString(data),
+      ];
+      return cols
+        .map((c) => `"${String(c).split('"').join('""')}"`)
+        .join(',');
+    });
+    return [header.join(','), ...rows].join('\n');
+  };
+
+  const handleExportData = async (format: 'json' | 'csv' | 'word' | 'pdf', docs: any[]) => {
+    try {
+      const stamp = new Date().toISOString().slice(0, 10);
+
+      if (format === 'json') {
+        const content = JSON.stringify({ exportedAt: new Date().toISOString(), count: docs.length, docs }, null, 2);
+        const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+        downloadBlob(blob, `ocr-export-${stamp}.json`);
+      } else if (format === 'csv') {
+        const csv = docsToCsv(docs);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        downloadBlob(blob, `ocr-export-${stamp}.csv`);
+      } else {
+        if (format === 'pdf') {
+          const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          const margin = 40;
+          const maxWidth = pageWidth - margin * 2;
+          let y = margin;
+
+          const addLine = (text: string, fontSize = 10, bold = false) => {
+            pdf.setFont('helvetica', bold ? 'bold' : 'normal');
+            pdf.setFontSize(fontSize);
+            const lines = pdf.splitTextToSize(text, maxWidth);
+            for (const line of lines) {
+              if (y > pageHeight - margin) {
+                pdf.addPage();
+                y = margin;
+              }
+              pdf.text(line, margin, y);
+              y += fontSize + 4;
+            }
+          };
+
+          addLine('OCR Export', 16, true);
+          addLine(`Exported at: ${new Date().toLocaleString()}`, 10);
+          addLine(`Total documents: ${docs.length}`, 10);
+          y += 8;
+
+          docs.forEach((d, idx) => {
+            addLine(`Document ${idx + 1}`, 12, true);
+            addLine(`ID: ${safeString(d?._id)}`, 10);
+            addLine(`File: ${safeString(d?.fileName)}`, 10);
+            addLine(`Created: ${safeString(d?.createdAt)}`, 10);
+            addLine('Data:', 10, true);
+            const data = d?.rawJson?.data ?? {};
+            const jsonText = (() => {
+              try {
+                return JSON.stringify(data, null, 2);
+              } catch {
+                return safeString(data);
+              }
+            })();
+            addLine(jsonText, 8, false);
+            y += 10;
+          });
+
+          pdf.save(`ocr-export-${stamp}.pdf`);
+          toast({
+            title: 'Export started',
+            description: `Downloaded ${docs.length} document(s).`,
+          });
+          return;
+        }
+
+        const doc = new Document({
+          sections: [
+            {
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: 'OCR Export', bold: true, size: 32 }),
+                  ],
+                }),
+                new Paragraph(`Exported at: ${new Date().toLocaleString()}`),
+                new Paragraph(`Total documents: ${docs.length}`),
+                new Paragraph(''),
+                ...docs.flatMap((d, idx) => {
+                  const data = d?.rawJson?.data ?? {};
+                  const jsonText = (() => {
+                    try {
+                      return JSON.stringify(data, null, 2);
+                    } catch {
+                      return safeString(data);
+                    }
+                  })();
+
+                  return [
+                    new Paragraph({
+                      children: [
+                        new TextRun({ text: `Document ${idx + 1}`, bold: true }),
+                      ],
+                    }),
+                    new Paragraph(`ID: ${safeString(d?._id)}`),
+                    new Paragraph(`File: ${safeString(d?.fileName)}`),
+                    new Paragraph(`Created: ${safeString(d?.createdAt)}`),
+                    new Paragraph({
+                      children: [new TextRun({ text: 'Data:', bold: true })],
+                    }),
+                    new Paragraph({
+                      children: [
+                        new TextRun({ text: jsonText, font: 'Courier New' }),
+                      ],
+                    }),
+                    new Paragraph(''),
+                  ];
+                }),
+              ],
+            },
+          ],
+        });
+
+        const blob = await Packer.toBlob(doc);
+        downloadBlob(blob, `ocr-export-${stamp}.docx`);
+      }
+
+      toast({
+        title: 'Export started',
+        description: `Downloaded ${docs.length} document(s).`,
+      });
+    } catch (e) {
+      console.error(e);
+      toast({
+        title: 'Export failed',
+        description: 'Could not export data. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setMe(null);
+    navigate('/auth');
+  };
+
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard onUploadClick={() => setCurrentPage('upload')} />;
+        return (
+          <Dashboard
+            onUploadClick={() => setCurrentPage('upload')}
+            onReviewPendingClick={() => setCurrentPage('invoices')}
+            onManageCustomersClick={() => setCurrentPage('customers')}
+            onExportDataClick={handleExportData}
+          />
+        );
 
       case 'upload':
         return (
@@ -575,67 +806,13 @@ const Index = () => {
         return <CustomerManagement />;
 
       case 'invoices':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold">Invoice Management</h1>
-              <p className="text-muted-foreground">
-                View and manage all processed invoices.
-              </p>
-            </div>
-            <Card className="p-12 text-center">
-              <div className="w-16 h-16 gradient-primary rounded-full mx-auto mb-4 flex items-center justify-center">
-                <FileText className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Invoice Management</h3>
-              <p className="text-muted-foreground">
-                This feature requires backend integration. Connect to Supabase to enable invoice storage and management.
-              </p>
-            </Card>
-          </div>
-        );
+        return <InvoiceManagement />;
 
       case 'search':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold">Search & Analytics</h1>
-              <p className="text-muted-foreground">
-                Search through invoices and view analytics.
-              </p>
-            </div>
-            <Card className="p-12 text-center">
-              <div className="w-16 h-16 gradient-primary rounded-full mx-auto mb-4 flex items-center justify-center">
-                <Search className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Advanced Search</h3>
-              <p className="text-muted-foreground">
-                This feature requires backend integration. Connect to Supabase to enable search functionality.
-              </p>
-            </Card>
-          </div>
-        );
+        return <SearchAnalytics />;
 
       case 'settings':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold">Settings</h1>
-              <p className="text-muted-foreground">
-                Configure your OCR processing preferences.
-              </p>
-            </div>
-            <Card className="p-12 text-center">
-              <div className="w-16 h-16 gradient-primary rounded-full mx-auto mb-4 flex items-center justify-center">
-                <Settings className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Application Settings</h3>
-              <p className="text-muted-foreground">
-                Configure OCR settings, user preferences, and system configuration.
-              </p>
-            </Card>
-          </div>
-        );
+        return <SettingsScreen user={me} onLogout={handleLogout} />;
 
       default:
         return <Dashboard />;
@@ -644,7 +821,7 @@ const Index = () => {
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
+      <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} user={me} onLogout={handleLogout} />
       
       {/* Changed to flex-col and added the Footer at the bottom */}
       <main className="flex-1 flex flex-col overflow-auto bg-background">

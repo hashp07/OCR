@@ -19,7 +19,7 @@ const AuthForm: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // ✅ FIX: Uses your live Vercel environment variable, falls back to localhost for local development
+    // Uses your live Vercel environment variable, falls back to localhost for local development
    const API_BASE_URL = import.meta.env.VITE_BACKEND_URL 
     ? `${import.meta.env.VITE_BACKEND_URL}/api/users` 
     : 'http://localhost:3001/api/users';
@@ -207,7 +207,7 @@ const AuthForm: React.FC = () => {
 
                         <div className="field-wrapper slide-element">
                             <button className="submit-button" type="submit" disabled={isLoading}>
-                                {isLoading ? 'Processing...' : 'Start Scanning'}
+                                {isLoading ? 'Start Scanning...' : 'Start Scanning'}
                             </button>
                         </div>
 
@@ -291,8 +291,27 @@ const AuthForm: React.FC = () => {
                     padding: 0 10%;
                 }
 
-                /* ✅ PERFORMANCE FIX: Added GPU Acceleration & removed blur */
-                .credentials-panel.signin { left: 0; }
+                /* ✅ BUG FIX: Pointer events and Z-index management to prevent invisible panels from stealing clicks */
+                .credentials-panel.signin { 
+                    left: 0; 
+                    z-index: 2;
+                    pointer-events: auto;
+                }
+                .auth-wrapper.toggled .credentials-panel.signin { 
+                    z-index: 1;
+                    pointer-events: none; 
+                }
+
+                .credentials-panel.signup { 
+                    right: 0; 
+                    z-index: 1;
+                    pointer-events: none;
+                }
+                .auth-wrapper.toggled .credentials-panel.signup { 
+                    z-index: 2;
+                    pointer-events: auto; 
+                }
+
                 .credentials-panel.signin .slide-element {
                     transform: translate3d(0, 0, 0);
                     transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.7s ease;
@@ -320,7 +339,6 @@ const AuthForm: React.FC = () => {
                 .auth-wrapper.toggled .credentials-panel.signin .slide-element:nth-child(5) { transition-delay: 0.4s; }
                 .auth-wrapper.toggled .credentials-panel.signin .slide-element:nth-child(6) { transition-delay: 0.5s; }
 
-                .credentials-panel.signup { right: 0; }
                 .credentials-panel.signup .slide-element {
                     transform: translate3d(120%, 0, 0);
                     transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.7s ease;
@@ -454,6 +472,8 @@ const AuthForm: React.FC = () => {
                     text-decoration: none;
                     color: var(--violet-glow);
                     font-weight: 600;
+                    position: relative;
+                    z-index: 20; /* Ensure links are distinctly clickable */
                 }
 
                 .switch-link a:hover {
@@ -577,7 +597,6 @@ const AuthForm: React.FC = () => {
                     letter-spacing: 1px;
                 }
 
-                /* ✅ PERFORMANCE FIX: Hardware acceleration for large background shapes */
                 .auth-wrapper .background-shape {
                     position: absolute;
                     right: -10vw;
@@ -587,7 +606,7 @@ const AuthForm: React.FC = () => {
                     background: linear-gradient(45deg, var(--violet-dark), var(--violet-glow));
                     transform: rotate(15deg) skewY(20deg) translateZ(0);
                     transform-origin: bottom right;
-                    transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+                    transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1), top 1.5s ease;
                     transition-delay: 1.6s;
                     box-shadow: 0 0 50px rgba(138, 43, 226, 0.4);
                     overflow: hidden;
@@ -640,6 +659,52 @@ const AuthForm: React.FC = () => {
                 .auth-wrapper.toggled .secondary-shape {
                     transform: rotate(-15deg) skewY(-20deg) translateZ(0);
                     transition-delay: 1.2s;
+                }
+
+                /* =======================================================
+                   📱 MOBILE RESPONSIVENESS OVERRIDES
+                   ======================================================= */
+                @media (max-width: 768px) {
+                    .auth-wrapper .credentials-panel {
+                        width: 100%;
+                        padding: 0 8%;
+                    }
+
+                    /* Make text links pure white and underlined on mobile */
+                    .switch-link a {
+                        color: #ffffff !important;
+                        text-decoration: underline;
+                        text-underline-offset: 4px;
+                    }
+                    .switch-link a:hover {
+                        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+                    }
+
+                    .welcome-section {
+                        display: none !important;
+                    }
+
+                    .credentials-panel h2 {
+                        font-size: 36px;
+                    }
+
+                    .auth-wrapper .background-shape {
+                        width: 200vw;
+                        height: 70vh;
+                        right: -50vw;
+                        top: -30vh;
+                        transform: rotate(10deg);
+                    }
+
+                    .auth-wrapper.toggled .background-shape {
+                        transform: rotate(-10deg);
+                        top: 60vh;
+                    }
+
+                    .auth-wrapper .secondary-shape {
+                        opacity: 0;
+                        transition: opacity 0.5s ease;
+                    }
                 }
             `}</style>
         </>

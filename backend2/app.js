@@ -7,12 +7,14 @@ const cors = require('cors');
 const connectDB = require('./db/db');
 const userRoutes = require('./routes/user.route');
 const ocrRoutes = require('./routes/ocr.route');
+const customerRoutes = require('./routes/customer.route');
 connectDB();
 
 // ✅ FIX: Configure CORS to accept requests from your local frontend AND your live Vercel frontend
 const corsOptions = {
   origin: [
-    'http://localhost:5173', // Allow your local Vite dev server
+    'http://localhost:8080', // Allow your local Vite dev server
+    'http://localhost:5173', // Default Vite dev server
     'https://ocriq.vercel.app', // REPLACE THIS with your actual live Vercel frontend URL!
   ],
   methods: 'GET,POST,PUT,DELETE',
@@ -29,5 +31,6 @@ app.get('/', (req, res) => {
 
 app.use('/api/ocr', ocrRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/customers', customerRoutes);
 
 module.exports = app;

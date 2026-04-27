@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import logo1 from "@/assets/logo2.jpeg";
 
 // --- CONTENT DATA ---
 const footerContentMap: Record<string, { title: string; subtitle: string; body: React.ReactNode }> = {
@@ -117,6 +118,17 @@ const Footer = () => {
   // Function to close the modal
   const closeModal = () => setActiveModal(null);
 
+  // --- ADDED scrollToSection FUNCTION ---
+  const scrollToSection = (e: React.MouseEvent<HTMLDivElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      const yOffset = -100; // Match the offset used in your Hero component
+      const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
   return (
     <>
       <footer className="relative z-10 border-t border-white/10 bg-black/40 backdrop-blur-xl pt-16 pb-10 px-6 lg:px-12 font-sans">
@@ -124,17 +136,13 @@ const Footer = () => {
           
           {/* --- Brand Column --- */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center gap-3 font-extrabold text-2xl tracking-tight mb-5 text-white">
-              {/* Logo Icon */}
-              <div className="w-8 h-8 bg-[#a855f7] text-white flex items-center justify-center rounded-full">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-              </div>
-              OCRIQ
-            </div>
+             <div className="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onClick={(e) => scrollToSection(e, 'home')}>
+            <img 
+              src={logo1} 
+              alt="OCRIQ Logo" 
+              className="h-10 sm:h-12 md:h-14 w-auto object-contain pb-1"
+            />
+          </div>
             <p className="text-gray-400 text-[15px] max-w-[340px] leading-relaxed">
               Transforming physical documents into structured data with the power of advanced AI and seamless workflow integrations.
             </p>
