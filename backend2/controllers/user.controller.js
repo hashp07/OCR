@@ -42,8 +42,15 @@ module.exports.loginUser = async (req, res,next) => {
 
 module.exports.getMe = async (req, res) => {
     try {
-        const user = await userModel.findById(req.user.id).select('username email');
-        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        // ✅ FIX: Look for _id first, fallback to id just in case!
+        const userId = req.user._id || req.user.id; 
+
+        const user = await userModel.findById(userId).select('username email');
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        
         return res.status(200).json({ success: true, user });
     } catch (error) {
         console.error('Error fetching user:', error);
