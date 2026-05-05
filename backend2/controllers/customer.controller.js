@@ -2,17 +2,26 @@ const Customer = require("../models/Customer");
 const OCRModel = require("../models/OCRDocument");
 
 function getDocData(record) {
-  if (record?.rawJson?.data) return record.rawJson.data;
-  if (record?.data) return record.data;
-
+  // 1. Check extractedText FIRST!
   if (typeof record?.extractedText === "string") {
     try {
       const parsed = JSON.parse(record.extractedText);
-      return parsed?.data || {};
+      // Catch standard formatting
+      if (parsed?.data && Object.keys(parsed.data).length > 0) {
+        return parsed.data;
+      } 
+      // Catch flat JSON objects if the AI forgets the "data" wrapper
+      else if (parsed && Object.keys(parsed).length > 0) {
+        return parsed;
+      }
     } catch {
-      return {};
+      // Fallback if parsing fails
     }
   }
+
+  // 2. Fall back to rawJson
+  if (record?.rawJson?.data) return record.rawJson.data;
+  if (record?.data) return record.data;
 
   return {};
 }
@@ -24,31 +33,54 @@ function formatDateOnly(value) {
   return date.toISOString().split("T")[0];
 }
 
+// 🚀 UPGRADED: Safely extracts numbers. Solves the bug where 
+// "Rs. 2388" or "₹ 2,388" breaks the math!
 function parseAmount(val) {
   if (typeof val === "number") return val;
   if (typeof val === "string") {
-    const parsed = parseFloat(val.replace(/,/g, "").replace(/[^\d.-]/g, ""));
-    return Number.isNaN(parsed) ? 0 : parsed;
+    // Strip commas, then match the first pure number block it finds
+    const match = val.replace(/,/g, "").match(/-?\d+(\.\d+)?/);
+    return match ? parseFloat(match[0]) : 0;
   }
   return 0;
 }
 
+// 🚀 UPGRADED: Keeps searching until it finds an ACTUAL number > 0
 function extractAmount(data) {
-  if (!data) return 0;
-  if (data.total_amount) return parseAmount(data.total_amount);
-  if (data.total) return parseAmount(data.total);
-  if (data.amount_due) return parseAmount(data.amount_due);
-  if (data.after_jan_20_2025) return parseAmount(data.after_jan_20_2025);
-  if (data.between_nov_30_2024_and_jan_20_2025) return parseAmount(data.between_nov_30_2024_and_jan_20_2025);
-  if (data.before_nov_30_2024) return parseAmount(data.before_nov_30_2024);
-  if (data.before_sep_25_2022) return parseAmount(data.before_sep_25_2022);
+  if (!data || typeof data !== "object") return 0;
+  
+  // 1. Try standard exact matches first
+  const candidates = [
+    data.total_amount, data.total, data.amount_due, 
+    data.amount, data.grand_total, data.balance_due
+  ];
+  
+  for (const val of candidates) {
+    const num = parseAmount(val);
+    if (num > 0) return num;
+  }
 
-  for (const [key, value] of Object.entries(data)) {
+  // 2. Smart search for dynamic utility bill keys
+  for (const [key, val] of Object.entries(data)) {
     const k = key.toLowerCase();
-    if ((k.includes("amount") || k.includes("total")) && (typeof value === "string" || typeof value === "number")) {
-      return parseAmount(value);
+    if (k.startsWith('after_') || k.startsWith('before_') || k.startsWith('between_')) {
+      const num = parseAmount(val);
+      if (num > 0) return num; // Only stop if it actually found a number!
     }
   }
+
+  // 3. Fallback to searching for money words
+  for (const [key, val] of Object.entries(data)) {
+     const k = key.toLowerCase();
+     const hasMoneyWord = k.includes("amount") || k.includes("total") || k.includes("due") || k.includes("balance");
+     const isNotDate = !k.includes("date") && !k.includes("time") && !k.includes("day");
+     
+     if (hasMoneyWord && isNotDate) {
+        const num = parseAmount(val);
+        if (num > 0) return num; // Only stop if it actually found a number!
+     }
+  }
+
   return 0;
 }
 
@@ -108,6 +140,8 @@ module.exports.getCustomerSummary = async (req, res) => {
 
       const customer = customerMap.get(key);
       customer.totalInvoices += 1;
+      
+      // Calculate the total safely
       customer.totalAmountNum += extractAmount(data);
 
       if (!Number.isNaN(recordDateMs) && recordDateMs > customer.lastInvoiceTs) {
@@ -195,8 +229,7 @@ module.exports.deleteCustomer = async (req, res) => {
 
     await Customer.deleteOne({ createdBy: req.user.id, key });
 
-    // If key looks like an actual customer id (consumer number / account number), delete OCR docs for it.
-    // This makes "Delete customer" actually remove them from the grid.
+    // If key looks like an actual customer id, delete OCR docs for it.
     await OCRModel.deleteMany({ createdBy: req.user.id, "rawJson.data.consumer_number": key });
 
     return res.status(200).json({ success: true, message: "Customer deleted" });
@@ -205,4 +238,3 @@ module.exports.deleteCustomer = async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to delete customer", error: error.message });
   }
 };
-

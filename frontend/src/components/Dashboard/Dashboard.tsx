@@ -56,21 +56,25 @@ export function Dashboard({ onUploadClick, onReviewPendingClick, onExportDataCli
   }, []);
 
   const getDocData = (doc: any) => {
-    if (doc?.rawJson?.data) return doc.rawJson.data;
-    if (doc?.data) return doc.data;
-
+    // 1. Check extractedText FIRST. This holds the pure, un-stripped data from the AI
+    // which rescues your old April 27th uploads!
     if (typeof doc?.extractedText === 'string') {
       try {
         const parsed = JSON.parse(doc.extractedText);
-        return parsed?.data || {};
+        if (parsed?.data && Object.keys(parsed.data).length > 0) {
+          return parsed.data;
+        }
       } catch {
-        return {};
+        // If it fails to parse, just fallback to the next step
       }
     }
 
+    // 2. Fall back to rawJson if extractedText isn't available
+    if (doc?.rawJson?.data) return doc.rawJson.data;
+    if (doc?.data) return doc.data;
+
     return {};
   };
-
   const formatAmount = (value: any) => {
     if (value === undefined || value === null || value === '') return 'N/A';
     const normalized = String(value).trim();
@@ -125,18 +129,38 @@ export function Dashboard({ onUploadClick, onReviewPendingClick, onExportDataCli
   const avgTime = totalInvoices > 0 ? "4.2s" : "0s";
 
   const dynamicRecentInvoices = dbData.slice(0, 5).map((doc) => {
-    const data = getDocData(doc);
+    const data = getDocData(doc) || {};
 
-    // dynamically try to extract amount and name depending on JSON layout
-    const amountStr =
-      data?.total ||
-      data?.total_amount ||
-      data?.after_jan_20_2025 ||
-      data?.between_nov_30_2024_and_jan_20_2025 ||
-      data?.before_nov_30_2024 ||
-      data?.before_sep_25_2022 ||
-      '';
-    const nameStr = data?.account_holder || data?.vendor_name || data?.customer_name || 'Unknown';
+    // 1. SMART AMOUNT EXTRACTION
+    let amountStr = '';
+    
+    // Step A: Try standard invoice keys first
+    amountStr = data.total || data.total_amount || data.amount || data.grand_total || data.balance_due || '';
+    
+    // Step B: If standard keys fail, hunt for the dynamic utility bill keys
+    if (!amountStr && Object.keys(data).length > 0) {
+      // Prioritize "after_" because it's usually the final/highest total amount
+      let targetKey = Object.keys(data).find(key => key.toLowerCase().startsWith('after_'));
+      
+      // Fallback to "before_" or "between_" if "after_" doesn't exist
+      if (!targetKey) {
+        targetKey = Object.keys(data).find(key => key.toLowerCase().startsWith('before_') || key.toLowerCase().startsWith('between_'));
+      }
+
+      if (targetKey) {
+        amountStr = data[targetKey];
+      }
+    }
+
+    // 2. SMART NAME EXTRACTION
+    let nameStr = data.account_holder || data.vendor_name || data.customer_name;
+    if (!nameStr && Object.keys(data).length > 0) {
+      const nameKey = Object.keys(data).find(key => 
+        key.toLowerCase().includes('name') || key.toLowerCase().includes('holder')
+      );
+      nameStr = nameKey ? data[nameKey] : 'Unknown';
+    }
+
     const dateStr = data?.bill_date || data?.date || new Date(doc.createdAt).toISOString().split('T')[0];
     const idStr = data?.bill_number || doc._id?.substring(0, 8) || `INV-${Math.random().toString(36).slice(2, 7)}`;
 
@@ -147,7 +171,7 @@ export function Dashboard({ onUploadClick, onReviewPendingClick, onExportDataCli
       amount: formatAmount(amountStr),
       status: 'processed',
       date: dateStr,
-      confidence: 98, // Hardcoding visually for model missing confidence features
+      confidence: 98, 
       source: doc,
       fields: data,
     };
